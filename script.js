@@ -91,3 +91,33 @@ items.addEventListener("keydown", (event) => {
 const today = new Date();
 dateInput.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 addItem(false);
+
+function preparePrint() {
+  recalculate();
+  const number = document.querySelector('[name="estimate-number"]').value.trim();
+  const date = dateInput.value ? dateInput.value.split("-").reverse().join(".") : "—";
+  document.querySelector("#print-title").textContent = `Смета № ${number || "—"} от ${date}`;
+
+  // Text copies wrap long values on paper instead of clipping them inside inputs.
+  for (const field of document.querySelectorAll(".details-grid input, #items input, #items select")) {
+    let value = field.value;
+    if (field === dateInput) value = date;
+    if (field.matches(".item-price")) value = formatMoney(parseNumber(value));
+    if (field.matches(".item-quantity")) value = String(parseNumber(value));
+    let copy = field.nextElementSibling;
+    if (!copy || !copy.classList.contains("print-value")) {
+      copy = document.createElement("span");
+      copy.className = "print-value";
+      copy.setAttribute("aria-hidden", "true");
+      field.after(copy);
+    }
+    copy.textContent = value;
+  }
+  document.querySelector("#print-comment").textContent = document.querySelector("#comment").value;
+}
+
+document.querySelector("#save-pdf").addEventListener("click", () => {
+  preparePrint();
+  window.print();
+});
+window.addEventListener("beforeprint", preparePrint);
