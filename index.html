@@ -56,6 +56,15 @@
         <h2 id="total-heading">Итого к оплате</h2>
         <output id="total" aria-live="polite" aria-atomic="true">0 ₸</output>
       </div>
+      <div class="prepayment-control">
+        <label for="prepayment" id="prepayment-label">Предоплата, ₸</label>
+        <input id="prepayment" type="text" inputmode="decimal" value="0" autocomplete="off">
+      </div>
+      <p id="prepayment-warning" class="prepayment-warning" role="status" hidden>Предоплата больше суммы сметы</p>
+      <dl id="payment-summary" class="payment-summary" aria-live="polite" aria-atomic="true" hidden>
+        <div class="summary-row"><dt>Предоплата</dt><dd id="prepayment-amount">0 ₸</dd></div>
+        <div class="summary-row balance-row"><dt>Остаток к оплате</dt><dd id="balance">0 ₸</dd></div>
+      </dl>
     </section>
     <section class="card comment-card" aria-labelledby="comment-heading">
       <h2 id="comment-heading">Комментарий</h2>

@@ -10,6 +10,9 @@ const vatInput = document.querySelector("#vat-rate");
 const currencyInput = document.querySelector("#currency");
 const priceHeading = document.querySelector("#price-heading");
 const subtotalOutput = document.querySelector("#subtotal");
+const prepaymentInput = document.querySelector("#prepayment");
+const prepaymentOutput = document.querySelector("#prepayment-amount");
+const balanceOutput = document.querySelector("#balance");
 const moneyFormatter = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
 const draftKey = "smeta-draft-v1";
 const draftFields = {
@@ -20,7 +23,8 @@ const draftFields = {
   discount: discountInput,
   vat: vatInput,
   currency: currencyInput,
-  comment: document.querySelector("#comment")
+  comment: document.querySelector("#comment"),
+  prepayment: prepaymentInput
 };
 const itemFields = { name: ".item-name", quantity: ".item-quantity", unit: ".item-unit", price: ".item-price" };
 let restoringDraft = true;
@@ -69,7 +73,14 @@ function recalculate() {
   showSummaryAmount("discount", discount);
   showSummaryAmount("discounted", discounted);
   showSummaryAmount("vat", vat);
-  totalOutput.textContent = formatMoney(safeMoney(discounted + vat));
+  const payable = safeMoney(discounted + vat);
+  const prepayment = Math.max(0, safeMoney(parseNumber(prepaymentInput.value)));
+  totalOutput.textContent = formatMoney(payable);
+  document.querySelector("#prepayment-label").textContent = `Предоплата, ${currencyInput.value}`;
+  prepaymentOutput.textContent = formatMoney(prepayment);
+  balanceOutput.textContent = formatMoney(Math.max(0, safeMoney(payable - prepayment)));
+  document.querySelector("#payment-summary").hidden = prepayment === 0;
+  document.querySelector("#prepayment-warning").hidden = !(prepayment > 0 && prepayment > payable);
 }
 
 function addItem(focus = true, values = {}) {
@@ -86,6 +97,7 @@ function addItem(focus = true, values = {}) {
 addButton.addEventListener("click", () => addItem());
 discountInput.addEventListener("input", recalculate);
 vatInput.addEventListener("input", recalculate);
+prepaymentInput.addEventListener("input", recalculate);
 currencyInput.addEventListener("change", recalculate);
 items.addEventListener("input", recalculate);
 items.addEventListener("click", (event) => {
@@ -131,6 +143,8 @@ function restoreDraft() {
   try {
     const saved = JSON.parse(localStorage.getItem(draftKey));
     if (!saved || saved.version !== 1 || !saved.fields || !Array.isArray(saved.positions)) return false;
+    // Older drafts have no prepayment field; keep all their existing data.
+    if (saved.fields.prepayment === undefined) saved.fields.prepayment = "0";
     if (!Object.keys(draftFields).every(key => typeof saved.fields[key] === "string")) return false;
     if (!["₸", "₽", "$", "€"].includes(saved.fields.currency)) return false;
     if (!saved.positions.every(row => row && Object.keys(itemFields).every(key => typeof row[key] === "string") && ["шт", "час", "услуга"].includes(row.unit))) return false;
@@ -151,7 +165,7 @@ recalculate();
 
 for (const eventName of ["input", "change"]) {
   document.addEventListener(eventName, event => {
-    if (event.target.matches(".details-grid input, .adjustments input, .adjustments select, #items input, #items select, #comment")) saveDraft();
+    if (event.target.matches(".details-grid input, .adjustments input, .adjustments select, #items input, #items select, #comment, #prepayment")) saveDraft();
   });
 }
 
@@ -173,6 +187,7 @@ document.querySelector("#new-estimate").addEventListener("click", () => {
   draftFields.number.value = nextNumber;
   discountInput.value = "0";
   vatInput.value = "0";
+  prepaymentInput.value = "0";
   currencyInput.value = "₸";
   setToday();
   items.replaceChildren();
@@ -205,6 +220,9 @@ function buildShareText() {
     if (!document.querySelector(`#${key}-row`).hidden) lines.push(`${label}: ${document.querySelector(`#${key}-amount`).textContent}`);
   }
   lines.push(`Итого к оплате: ${totalOutput.textContent}`);
+  if (!document.querySelector("#payment-summary").hidden) {
+    lines.push(`Предоплата: ${prepaymentOutput.textContent}`, `Остаток к оплате: ${balanceOutput.textContent}`);
+  }
   if (draftFields.comment.value.trim()) lines.push("", draftFields.comment.value.trim());
   return lines.join("\n");
 }
