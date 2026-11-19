@@ -65,7 +65,16 @@
     <p class="signature print-only">Подпись ____________________</p>
     <div class="document-actions">
       <button id="save-pdf" type="button">Сохранить PDF</button>
+      <button id="copy-whatsapp" class="secondary-button" type="button">Скопировать для WhatsApp</button>
+      <button id="new-estimate" class="secondary-button" type="button">Новая смета</button>
       <p>В окне печати выберите «Сохранить как PDF».</p>
+    </div>
+    <p id="copy-status" class="feedback" role="status" aria-live="polite"></p>
+    <p id="storage-status" class="feedback" role="status" aria-live="polite"></p>
+    <div id="manual-copy" class="manual-copy" hidden>
+      <label for="share-text">Скопируйте текст вручную</label>
+      <p id="manual-copy-hint">Выделите текст и скопируйте его через меню или Ctrl+C (⌘C на Mac).</p>
+      <textarea id="share-text" rows="10" readonly aria-describedby="manual-copy-hint"></textarea>
     </div>
   </main>
 

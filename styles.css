@@ -56,6 +56,13 @@ td:last-child { padding-right: 0; }
 .document-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 #save-pdf { padding: 12px 22px; background: var(--accent); color: #fff; border: 1px solid var(--accent); }
 #save-pdf:hover { background: #2547ac; }
+.secondary-button { padding: 12px 18px; background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+.secondary-button:hover { background: #edf1fb; }
+.feedback { margin-top: 12px; color: #3159ce; }
+.feedback:empty { display: none; }
+.manual-copy { margin-top: 20px; padding: 20px; background: #fff; border: 1px solid #e1e6ee; border-radius: 12px; }
+.manual-copy[hidden] { display: none; }
+.manual-copy p { margin: 8px 0 12px; font-size: 14px; }
 
 @media screen and (min-width: 641px) and (max-width: 900px) {
   .page { padding: 32px 16px; }
@@ -69,7 +76,7 @@ td:last-child { padding-right: 0; }
 @media print {
   :root, body { background: #fff; color: #000; font-size: 11pt; }
   .page { width: auto; max-width: none; margin: 0; padding: 0; }
-  .page-header, button, .document-actions, .adjustments,
+  .page-header, button, .document-actions, .adjustments, .feedback, .manual-copy,
   .details-grid input, #items input, #items select, #comment,
   th:last-child, .remove-cell { display: none !important; }
   .print-only, .print-value { display: block; }
