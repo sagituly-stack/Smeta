@@ -40,7 +40,10 @@
       <button id="add-item" class="add-button" type="button">+ Добавить позицию</button>
       <div class="adjustments">
         <label>Скидка, %<input id="discount-rate" type="text" inputmode="decimal" value="0" autocomplete="off"></label>
-        <label>НДС, %<input id="vat-rate" type="text" inputmode="decimal" value="0" autocomplete="off"></label>
+        <div class="vat-controls">
+          <label>Режим НДС<select id="vat-mode"><option value="manual">Ручная ставка</option><option value="export-zero">Экспортные товары — НДС 0 %</option></select></label>
+          <label id="vat-rate-control">НДС, %<input id="vat-rate" type="text" inputmode="decimal" value="0" autocomplete="off"></label>
+        </div>
         <label>Валюта<select id="currency"><option value="₸">₸</option><option value="₽">₽</option><option value="$">$</option><option value="€">€</option></select></label>
       </div>
     </section>
@@ -50,7 +53,7 @@
         <div class="summary-row"><dt>Сумма</dt><dd id="subtotal">0 ₸</dd></div>
         <div class="summary-row" id="discount-row" hidden><dt>Скидка</dt><dd id="discount-amount">0 ₸</dd></div>
         <div class="summary-row" id="discounted-row" hidden><dt>Сумма со скидкой</dt><dd id="discounted-amount">0 ₸</dd></div>
-        <div class="summary-row" id="vat-row" hidden><dt>НДС</dt><dd id="vat-amount">0 ₸</dd></div>
+        <div class="summary-row" id="vat-row" hidden><dt id="vat-summary-label">НДС</dt><dd id="vat-amount">0 ₸</dd></div>
       </dl>
       <div class="total-line">
         <h2 id="total-heading">Итого к оплате</h2>

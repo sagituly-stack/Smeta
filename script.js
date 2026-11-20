@@ -8,6 +8,7 @@ const amountInWordsOutput = document.querySelector("#amount-in-words");
 const dateInput = document.querySelector("#estimate-date");
 const discountInput = document.querySelector("#discount-rate");
 const vatInput = document.querySelector("#vat-rate");
+const vatModeInput = document.querySelector("#vat-mode");
 const currencyInput = document.querySelector("#currency");
 const exchangeCurrencyInput = document.querySelector("#exchange-currency");
 const exchangeRateInput = document.querySelector("#exchange-rate");
@@ -26,6 +27,7 @@ const draftFields = {
   date: dateInput,
   discount: discountInput,
   vat: vatInput,
+  vatMode: vatModeInput,
   currency: currencyInput,
   comment: document.querySelector("#comment"),
   prepayment: prepaymentInput,
@@ -120,11 +122,16 @@ function recalculate() {
   }
   const discount = safeMoney(total * (parseNumber(discountInput.value) / 100));
   const discounted = safeMoney(total - discount);
-  const vat = safeMoney(discounted * (parseNumber(vatInput.value) / 100));
+  const exportZero = vatModeInput.value === "export-zero";
+  const vat = exportZero ? 0 : safeMoney(discounted * (parseNumber(vatInput.value) / 100));
+  document.querySelector("#vat-rate-control").hidden = exportZero;
+  vatInput.disabled = exportZero;
   subtotalOutput.textContent = formatMoney(total);
   showSummaryAmount("discount", discount);
   showSummaryAmount("discounted", discounted);
   showSummaryAmount("vat", vat);
+  document.querySelector("#vat-summary-label").textContent = exportZero ? "НДС 0 % (экспортные товары)" : "НДС";
+  if (exportZero) document.querySelector("#vat-row").hidden = false;
   const payable = safeMoney(discounted + vat);
   const prepayment = Math.max(0, safeMoney(parseNumber(prepaymentInput.value)));
   totalOutput.textContent = formatMoney(payable);
@@ -153,6 +160,7 @@ function addItem(focus = true, values = {}) {
 addButton.addEventListener("click", () => addItem());
 discountInput.addEventListener("input", recalculate);
 vatInput.addEventListener("input", recalculate);
+vatModeInput.addEventListener("change", recalculate);
 prepaymentInput.addEventListener("input", recalculate);
 exchangeCurrencyInput.addEventListener("change", () => {
   exchangeRateInput.value = "";
@@ -209,9 +217,11 @@ function restoreDraft() {
     if (!saved || saved.version !== 1 || !saved.fields || !Array.isArray(saved.positions)) return false;
     // Older drafts have no prepayment field; keep all their existing data.
     if (saved.fields.prepayment === undefined) saved.fields.prepayment = "0";
+    if (saved.fields.vatMode === undefined) saved.fields.vatMode = "manual";
     if (saved.fields.exchangeCurrency === undefined) saved.fields.exchangeCurrency = "USD";
     if (saved.fields.exchangeRate === undefined) saved.fields.exchangeRate = "";
     if (!Object.keys(draftFields).every(key => typeof saved.fields[key] === "string")) return false;
+    if (!["manual", "export-zero"].includes(saved.fields.vatMode)) return false;
     if (!["USD", "MUR", "CNY"].includes(saved.fields.exchangeCurrency)) return false;
     if (!["₸", "₽", "$", "€"].includes(saved.fields.currency)) return false;
     if (!saved.positions.every(row => row && Object.keys(itemFields).every(key => typeof row[key] === "string") && ["шт", "час", "услуга"].includes(row.unit))) return false;
@@ -254,6 +264,7 @@ document.querySelector("#new-estimate").addEventListener("click", () => {
   draftFields.number.value = nextNumber;
   discountInput.value = "0";
   vatInput.value = "0";
+  vatModeInput.value = "manual";
   prepaymentInput.value = "0";
   currencyInput.value = "₸";
   exchangeCurrencyInput.value = "USD";
@@ -284,7 +295,7 @@ function buildShareText() {
     lines.push(`• ${name} — ${quantity} ${unit} × ${formatMoney(price)} = ${amount}`);
   }
   lines.push("", `Сумма: ${subtotalOutput.textContent}`);
-  for (const [key, label] of [["discount", "Скидка"], ["discounted", "Сумма со скидкой"], ["vat", "НДС"]]) {
+  for (const [key, label] of [["discount", "Скидка"], ["discounted", "Сумма со скидкой"], ["vat", document.querySelector("#vat-summary-label").textContent]]) {
     if (!document.querySelector(`#${key}-row`).hidden) lines.push(`${label}: ${document.querySelector(`#${key}-amount`).textContent}`);
   }
   lines.push(`Итого к оплате: ${totalOutput.textContent}`);

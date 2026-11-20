@@ -41,6 +41,8 @@ td:last-child { padding-right: 0; }
 .add-button { margin-top: 20px; padding: 12px 18px; border: 1px solid var(--accent); color: var(--accent); background: #fff; }
 .add-button:hover { background: #edf1fb; }
 .adjustments { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 28px; padding-top: 24px; border-top: 1px solid #e1e6ee; }
+.vat-controls { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.vat-controls [hidden] { display: none; }
 .total-card { padding: 28px; border: 1px solid #d8e1fb; border-radius: 20px; background: #edf1fb; }
 .summary { margin: 0 0 20px; }
 .summary-row, .total-line { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
