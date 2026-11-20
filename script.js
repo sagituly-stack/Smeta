@@ -9,6 +9,9 @@ const dateInput = document.querySelector("#estimate-date");
 const discountInput = document.querySelector("#discount-rate");
 const vatInput = document.querySelector("#vat-rate");
 const currencyInput = document.querySelector("#currency");
+const exchangeCurrencyInput = document.querySelector("#exchange-currency");
+const exchangeRateInput = document.querySelector("#exchange-rate");
+const exchangeFormatter = new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const priceHeading = document.querySelector("#price-heading");
 const subtotalOutput = document.querySelector("#subtotal");
 const prepaymentInput = document.querySelector("#prepayment");
@@ -25,7 +28,9 @@ const draftFields = {
   vat: vatInput,
   currency: currencyInput,
   comment: document.querySelector("#comment"),
-  prepayment: prepaymentInput
+  prepayment: prepaymentInput,
+  exchangeCurrency: exchangeCurrencyInput,
+  exchangeRate: exchangeRateInput
 };
 const itemFields = { name: ".item-name", quantity: ".item-quantity", unit: ".item-unit", price: ".item-price" };
 let restoringDraft = true;
@@ -84,6 +89,21 @@ function showSummaryAmount(name, amount) {
   document.querySelector(`#${name}-row`).hidden = amount === 0;
 }
 
+function updateExchange(payable) {
+  const target = exchangeCurrencyInput.value;
+  const source = currencyInput.value;
+  const rate = parseNumber(exchangeRateInput.value);
+  const converted = rate > 0 ? payable / rate : 0;
+  const valid = rate > 0 && Number.isFinite(converted);
+  document.querySelector("#exchange-rate-label").textContent = `Курс: 1 ${target} в ${source}`;
+  document.querySelector("#exchange-result").hidden = !valid;
+  document.querySelector("#exchange-status").hidden = valid;
+  document.querySelector("#exchange-rate-summary").textContent = valid
+    ? `Курс пересчёта: 1 ${target} = ${String(rate).replace(".", ",")} ${source}` : "";
+  document.querySelector("#exchange-total").textContent = valid
+    ? `${exchangeFormatter.format(converted).replace(/[\u00a0\u202f]/g, " ")} ${target}` : `0,00 ${target}`;
+}
+
 function recalculate() {
   let total = 0;
   const priceLabel = `Цена, ${currencyInput.value}`;
@@ -116,6 +136,7 @@ function recalculate() {
   balanceOutput.textContent = formatMoney(Math.max(0, safeMoney(payable - prepayment)));
   document.querySelector("#payment-summary").hidden = prepayment === 0;
   document.querySelector("#prepayment-warning").hidden = !(prepayment > 0 && prepayment > payable);
+  updateExchange(payable);
 }
 
 function addItem(focus = true, values = {}) {
@@ -133,7 +154,15 @@ addButton.addEventListener("click", () => addItem());
 discountInput.addEventListener("input", recalculate);
 vatInput.addEventListener("input", recalculate);
 prepaymentInput.addEventListener("input", recalculate);
-currencyInput.addEventListener("change", recalculate);
+exchangeCurrencyInput.addEventListener("change", () => {
+  exchangeRateInput.value = "";
+  recalculate();
+});
+exchangeRateInput.addEventListener("input", recalculate);
+currencyInput.addEventListener("change", () => {
+  exchangeRateInput.value = "";
+  recalculate();
+});
 items.addEventListener("input", recalculate);
 items.addEventListener("click", (event) => {
   const button = event.target.closest(".remove-button");
@@ -180,7 +209,10 @@ function restoreDraft() {
     if (!saved || saved.version !== 1 || !saved.fields || !Array.isArray(saved.positions)) return false;
     // Older drafts have no prepayment field; keep all their existing data.
     if (saved.fields.prepayment === undefined) saved.fields.prepayment = "0";
+    if (saved.fields.exchangeCurrency === undefined) saved.fields.exchangeCurrency = "USD";
+    if (saved.fields.exchangeRate === undefined) saved.fields.exchangeRate = "";
     if (!Object.keys(draftFields).every(key => typeof saved.fields[key] === "string")) return false;
+    if (!["USD", "MUR", "CNY"].includes(saved.fields.exchangeCurrency)) return false;
     if (!["₸", "₽", "$", "€"].includes(saved.fields.currency)) return false;
     if (!saved.positions.every(row => row && Object.keys(itemFields).every(key => typeof row[key] === "string") && ["шт", "час", "услуга"].includes(row.unit))) return false;
     for (const [key, field] of Object.entries(draftFields)) field.value = saved.fields[key];
@@ -200,7 +232,7 @@ recalculate();
 
 for (const eventName of ["input", "change"]) {
   document.addEventListener(eventName, event => {
-    if (event.target.matches(".details-grid input, .adjustments input, .adjustments select, #items input, #items select, #comment, #prepayment")) saveDraft();
+    if (event.target.matches(".details-grid input, .adjustments input, .adjustments select, .exchange-controls input, .exchange-controls select, #items input, #items select, #comment, #prepayment")) saveDraft();
   });
 }
 
@@ -224,6 +256,7 @@ document.querySelector("#new-estimate").addEventListener("click", () => {
   vatInput.value = "0";
   prepaymentInput.value = "0";
   currencyInput.value = "₸";
+  exchangeCurrencyInput.value = "USD";
   setToday();
   items.replaceChildren();
   document.querySelectorAll(".print-value").forEach(copy => copy.remove());
@@ -258,6 +291,10 @@ function buildShareText() {
   if (!amountInWordsOutput.hidden) lines.push(amountInWordsOutput.textContent);
   if (!document.querySelector("#payment-summary").hidden) {
     lines.push(`Предоплата: ${prepaymentOutput.textContent}`, `Остаток к оплате: ${balanceOutput.textContent}`);
+  }
+  if (!document.querySelector("#exchange-result").hidden) {
+    lines.push(document.querySelector("#exchange-rate-summary").textContent,
+      `Итого в другой валюте: ${document.querySelector("#exchange-total").textContent}`);
   }
   if (draftFields.comment.value.trim()) lines.push("", draftFields.comment.value.trim());
   return lines.join("\n");

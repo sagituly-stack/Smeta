@@ -67,6 +67,27 @@
         <div class="summary-row balance-row"><dt>Остаток к оплате</dt><dd id="balance">0 ₸</dd></div>
       </dl>
     </section>
+    <section class="card exchange-card" aria-labelledby="exchange-heading">
+      <h2 id="exchange-heading">Пересчёт в другую валюту</h2>
+      <div class="exchange-controls">
+        <label>Валюта пересчёта
+          <select id="exchange-currency">
+            <option value="USD">Доллары США (USD)</option>
+            <option value="MUR">Маврикийские рупии (MUR)</option>
+            <option value="CNY">Китайские юани (CNY)</option>
+          </select>
+        </label>
+        <label><span id="exchange-rate-label">Курс: 1 USD в ₸</span>
+          <input id="exchange-rate" type="text" inputmode="decimal" autocomplete="off" placeholder="Введите курс" aria-describedby="exchange-hint">
+        </label>
+      </div>
+      <p id="exchange-hint" class="exchange-hint">Введите курс вручную: сколько единиц валюты сметы стоит 1 единица выбранной валюты. Курсы из интернета не загружаются.</p>
+      <p id="exchange-status" role="status">Для пересчёта введите курс больше нуля.</p>
+      <div id="exchange-result" aria-live="polite" aria-atomic="true" hidden>
+        <p id="exchange-rate-summary"></p>
+        <p class="exchange-total">Итого в другой валюте: <output id="exchange-total"></output></p>
+      </div>
+    </section>
     <section class="card comment-card" aria-labelledby="comment-heading">
       <h2 id="comment-heading">Комментарий</h2>
       <textarea id="comment" aria-labelledby="comment-heading" rows="4" placeholder="Сроки выполнения, условия оплаты и другие договорённости"></textarea>
