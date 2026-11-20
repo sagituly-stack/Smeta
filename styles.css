@@ -49,6 +49,8 @@ td:last-child { padding-right: 0; }
 .summary-row dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; min-width: 0; }
 .total-line { border-top: 1px solid #cbd6f3; padding-top: 20px; }
 .total-card h2 { margin: 0; font-size: 20px; }
+.amount-in-words { margin-top: 12px; overflow-wrap: anywhere; }
+.amount-in-words[hidden] { display: none; }
 #total { font-size: clamp(28px, 4vw, 38px); font-weight: 750; color: var(--accent); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; min-width: 0; text-align: right; }
 .prepayment-control { display: grid; gap: 8px; margin-top: 24px; max-width: 320px; }
 .payment-summary { margin: 24px 0 0; }
@@ -113,6 +115,7 @@ td:last-child { padding-right: 0; }
   .total-line { flex-direction: row; align-items: baseline; gap: 4mm; border-color: #555; padding-top: 3mm; }
   .total-line h2 { margin: 0; }
   #total { font-size: 16pt; color: #000; text-align: right; }
+  .amount-in-words { color: #000; }
   .payment-summary { margin-top: 4mm; }
   .balance-row { padding-top: 3mm; border-color: #555; }
   .balance-row dt { font-size: 12pt; }

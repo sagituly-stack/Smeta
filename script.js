@@ -4,6 +4,7 @@ const items = document.querySelector("#items");
 const template = document.querySelector("#item-template");
 const addButton = document.querySelector("#add-item");
 const totalOutput = document.querySelector("#total");
+const amountInWordsOutput = document.querySelector("#amount-in-words");
 const dateInput = document.querySelector("#estimate-date");
 const discountInput = document.querySelector("#discount-rate");
 const vatInput = document.querySelector("#vat-rate");
@@ -47,6 +48,37 @@ function formatMoney(value) {
   return `${moneyFormatter.format(safeMoney(value)).replace(/[\u00a0\u202f]/g, " ")} ${currencyInput.value}`;
 }
 
+function amountInWords(amount) {
+  if (!Number.isInteger(amount) || amount <= 0 || amount > 999999999) return "";
+  const units = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
+  const teens = ["десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать"];
+  const tens = ["", "", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто"];
+  const hundreds = ["", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"];
+  const words = [];
+  for (const [divisor, forms, feminine] of [
+    [1000000, ["миллион", "миллиона", "миллионов"], false],
+    [1000, ["тысяча", "тысячи", "тысяч"], true],
+    [1, [], false]
+  ]) {
+    const group = Math.floor(amount / divisor) % 1000;
+    if (group === 0) continue;
+    const lastTwo = group % 100;
+    const last = group % 10;
+    if (group >= 100) words.push(hundreds[Math.floor(group / 100)]);
+    if (lastTwo >= 10 && lastTwo <= 19) words.push(teens[lastTwo - 10]);
+    else {
+      if (lastTwo >= 20) words.push(tens[Math.floor(lastTwo / 10)]);
+      if (last > 0) words.push(feminine && last <= 2 ? ["", "одна", "две"][last] : units[last]);
+    }
+    if (forms.length) {
+      const form = lastTwo >= 11 && lastTwo <= 14 ? 2 : last === 1 ? 0 : last >= 2 && last <= 4 ? 1 : 2;
+      words.push(forms[form]);
+    }
+  }
+  const text = `${words.join(" ")} тенге`;
+  return text[0].toUpperCase() + text.slice(1);
+}
+
 function showSummaryAmount(name, amount) {
   document.querySelector(`#${name}-amount`).textContent = formatMoney(amount);
   document.querySelector(`#${name}-row`).hidden = amount === 0;
@@ -76,6 +108,9 @@ function recalculate() {
   const payable = safeMoney(discounted + vat);
   const prepayment = Math.max(0, safeMoney(parseNumber(prepaymentInput.value)));
   totalOutput.textContent = formatMoney(payable);
+  const words = currencyInput.value === "₸" ? amountInWords(payable) : "";
+  amountInWordsOutput.textContent = words ? `Сумма прописью: ${words}` : "";
+  amountInWordsOutput.hidden = !words;
   document.querySelector("#prepayment-label").textContent = `Предоплата, ${currencyInput.value}`;
   prepaymentOutput.textContent = formatMoney(prepayment);
   balanceOutput.textContent = formatMoney(Math.max(0, safeMoney(payable - prepayment)));
@@ -220,6 +255,7 @@ function buildShareText() {
     if (!document.querySelector(`#${key}-row`).hidden) lines.push(`${label}: ${document.querySelector(`#${key}-amount`).textContent}`);
   }
   lines.push(`Итого к оплате: ${totalOutput.textContent}`);
+  if (!amountInWordsOutput.hidden) lines.push(amountInWordsOutput.textContent);
   if (!document.querySelector("#payment-summary").hidden) {
     lines.push(`Предоплата: ${prepaymentOutput.textContent}`, `Остаток к оплате: ${balanceOutput.textContent}`);
   }
